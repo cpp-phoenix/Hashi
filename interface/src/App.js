@@ -13,7 +13,6 @@ import {
   createClient,
   WagmiConfig,
 } from 'wagmi';
-import { alchemyProvider } from 'wagmi/providers/alchemy';
 import { publicProvider } from 'wagmi/providers/public';
 import Swap from './pages/Swap';
 import Stats from './pages/Stats';
@@ -23,7 +22,6 @@ import Navbar from './components/Navbar';
 const { chains, provider } = configureChains(
   [chain.goerli, chain.polygonMumbai],
   [
-    alchemyProvider({ apiKey: process.env.ALCHEMY_ID }),
     publicProvider()
   ]
 );
