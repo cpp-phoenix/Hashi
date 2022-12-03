@@ -17,13 +17,16 @@ interface IERC20 {
     ) external returns (bool);
 }
 
-contract AgnosticPool is Ownable {
+contract Hashipool is Ownable {
 
     address public bridgeContract;
 
 
     mapping(address => mapping(address => uint)) public stableStorage;
     mapping(address => uint) public totalStaked;
+
+    event depositPool(uint amount, IERC20 token, address sender);
+    event widthdrawPool(uint amount, IERC20 token, address sender);
 
     function updateBridgeContract(address _bridgeContract) external onlyOwner {
         bridgeContract = _bridgeContract;
@@ -38,6 +41,8 @@ contract AgnosticPool is Ownable {
         token.transferFrom(msg.sender, address(this), amount);
         stableStorage[msg.sender][address(token)] += amount; 
         totalStaked[address(token)] += amount;
+
+        emit depositPool(amount, token, msg.sender);
     }
         
     function widthdrawFromPool(uint amount, IERC20 token) external payable {
@@ -48,6 +53,8 @@ contract AgnosticPool is Ownable {
         stableStorage[msg.sender][address(token)] -= amount;
         totalStaked[address(token)] -= amount;
         token.transfer(msg.sender, amount);
+
+        emit widthdrawPool(amount, token, msg.sender);
     }
 
     function useLiquidity(uint amount, IERC20 token, address transferTo) external payable {

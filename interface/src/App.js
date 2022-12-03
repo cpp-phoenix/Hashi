@@ -19,6 +19,24 @@ import Stats from './pages/Stats';
 import Pools from './pages/Pools';
 import Navbar from './components/Navbar';
 
+const bscChain = {
+  id: 97,
+  name: 'Binance',
+  network: 'bnb',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Binance',
+    symbol: 'BNB',
+  },
+  rpcUrls: {
+    default: 'https://data-seed-prebsc-1-s1.binance.org:8545',
+  },
+  blockExplorers: {
+    default: { name: 'BscScan', url: 'https://testnet.bscscan.com' },
+  },
+  testnet: false,
+};
+
 const { chains, provider } = configureChains(
   [chain.goerli, chain.polygonMumbai],
   [

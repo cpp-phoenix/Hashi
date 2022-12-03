@@ -30,12 +30,9 @@ function Swap() {
             chianName: "Goerli",
             rpc: "https://goerli.infura.io/v3/",
             zeroX: "https://goerli.api.0x.org/",
+            receiverContract: "",
+            domain: 5,
             tokens: [
-                {
-                    token: "ETH",
-                    address: "",
-                    decimals: 18
-                },
                 {
                     token: "USDC",
                     address: "0x5FfbaC75EFc9547FBc822166feD19B05Cd5890bb",
@@ -58,12 +55,9 @@ function Swap() {
             chianName: "Mumbai",
             rpc: "https://matic-mumbai.chainstacklabs.com",
             zeroX: "https://mumbai.api.0x.org/",
+            receiverContract: "",
+            domain: 80001,
             tokens: [
-                {
-                    token: "MATIC",
-                    address: "",
-                    decimals: 18
-                },
                 {
                     token: "USDC",
                     address: "0xe6b8a5CF854791412c1f6EFC7CAf629f5Df1c747",
@@ -85,8 +79,8 @@ function Swap() {
 
     useEffect(() => {
         if(isConnected) {
-            setToChain(chain?.name);
-            setToChainId(chain?.id);
+            // setToChain(chain?.name);
+            // setToChainId(chain?.id);
         } 
     },[isConnected]);
 
@@ -98,7 +92,8 @@ function Swap() {
         if(targetValue > 0) {
             toggleToPayLoading(true);
             console.log(targetValue);
-            setSwapFrom(swapFrom);
+            setSwapFrom(targetValue);
+            setSwapTo(targetValue);
 
             let  amount = Number(targetValue * 10 ** tokenFrom.decimals);
 
@@ -130,9 +125,11 @@ function Swap() {
 
     return (
         <div className="flex flex-1 items-center justify-center h-5/6">
+        {
+            isConnected && 
             <div className="flex flex-col justify-between rounded-lg font-semibold w-5/12 h-5/6 bg-white">
                 <div className="text-2xl mx-4 mt-4">Swap</div>
-                <div className="rounded-lg border border-rounded h-[120px] mx-6 p-2">
+                <div className="rounded-lg border-2 border-rounded h-[160px] mx-6 p-2">
                     <div>
                         <div>From</div>
                         <div className="flex flex-row items-center h-[75px]">
@@ -159,13 +156,13 @@ function Swap() {
                         </div>
                     </div>
                 </div>
-                <div className="rounded-lg border border-rounded h-[120px] mx-6 p-2">
+                <div className="rounded-lg border-2 border-rounded h-[160px] mx-6 p-2">
                     <div>
                         <div>To</div>
                         { toChainSelect && 
                             <div className="absolute rounded-lg bg-white border-2 mt-16 mx-2 w-content">
                                 { 
-                                    chains.map((chain) => <div onClick={() => {setToChain(chain.name); setToChainId(chain?.id); toggleToChainSelect(!toChainSelect)}} className="flex justify-center py-2 px-2 hover:bg-gray-100 hover:cursor-pointer">{chain.name}</div>)
+                                    chains.filter((chainss) => chainss.id !== chain.id).map((chain) => <div onClick={() => {setToChain(chain.name); setToChainId(chain?.id); toggleToChainSelect(!toChainSelect)}} className="flex justify-center py-2 px-2 hover:bg-gray-100 hover:cursor-pointer">{chain.name}</div>)
                                 }
                             </div>
                         }
@@ -194,16 +191,17 @@ function Swap() {
                         </div>
                     </div>
                 </div>
-                <div className="rounded-lg border border-rounded h-[120px] mx-6 p-2">
+                {/* <div className="rounded-lg border border-rounded h-[120px] mx-6 p-2">
                     <div>
                         <div>You Pay</div>
                         <div className="animate-pulse p-1 flex flex-row items-center justify-center h-[75px]">
                             { toPayLoading && <div class="rounded-lg w-full h-full bg-slate-300"></div> }
                         </div>
                     </div>
-                </div>
+                </div> */}
                 <button onClick={() => sendTransaction()} className="w-full rounded-b-lg text-xl text-white py-4 bg-orange-600">Initiate</button>
             </div>
+        }
         </div>
     )
 }
