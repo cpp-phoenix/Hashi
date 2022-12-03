@@ -1,5 +1,7 @@
 import { useNetwork, useAccount } from 'wagmi';
 import { useEffect, useState } from 'react';
+import qs from 'qs';
+import { ethers, utils } from "ethers";
 
 function Swap() {
     const { chain, chains } = useNetwork();
@@ -112,7 +114,7 @@ function Swap() {
             );
 
             const swapPriceJSON = await response.json();
-            const outputBalance = utils.formatUnits(swapPriceJSON.buyAmount, receiveToken.decimals);
+            const outputBalance = utils.formatUnits(swapPriceJSON.buyAmount, tokenTo.decimals);
             setSwapTo(outputBalance);
 
             setProtocolFee(swapPriceJSON.protocolFee)
