@@ -4,7 +4,6 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "@hyperlane-xyz/core/interfaces/IMailbox.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
-import "./Hashiswap.sol";
 import "./Seriality.sol";
 
 /**
@@ -20,7 +19,6 @@ interface IHashipool {
 contract Hashicore is Ownable, Seriality{
 
     IMailbox mailbox;
-    Hashiswap hashiswap;
     IHashipool hashipool;
     address public lastSender;
     string public lastMessage;
@@ -41,9 +39,8 @@ contract Hashicore is Ownable, Seriality{
     event SentMessage(uint32 destinationDomain, address recipient, bytes message);
     event ReceivedMessage(uint32 origin, address sender, bytes message);
 
-    constructor(address _mailbox, address _hashiswap, address _hashipool) {
+    constructor(address _mailbox, address _hashipool) {
         mailbox = IMailbox(_mailbox);
-        hashiswap = Hashiswap(_hashiswap);
         hashipool = IHashipool(_hashipool);
     }
 
@@ -94,10 +91,16 @@ contract Hashicore is Ownable, Seriality{
         emit ReceivedMessage(_origin, bytes32ToAddress(_sender), _message);
     }
 
-    function initiateBridge(uint32 domain, IERC20 multiChainToken  ,IERC20 sellToken, IERC20 buyToken, address spender, uint amount, address payable swapTarget, bytes calldata swapCallData) public payable {
+    function initiateBridge(uint32 domain, address recipient, IERC20 multiChainToken, IERC20 sellToken, uint amount) public payable {
 
-        uint256 boughtAmount = hashiswap.executeSingleChainSwap(sellToken, buyToken, spender, amount, swapTarget, swapCallData, msg.sender);
+        // uint256 boughtAmount = hashiswap.executeSingleChainSwap(sellToken, buyToken, spender, amount, swapTarget, swapCallData, msg.sender);
         
+        require(sellToken.balanceOf(msg.sender) >= amount, "Insufficient Balance");
+        require(sellToken.allowance(msg.sender, address(this)) >= amount, "Not Approved");
+
+        sellToken.transferFrom((msg.sender),address(hashipool), amount);
+        
+        uint256 boughtAmount = amount;
         bytes memory message = new bytes(56);
         uint offset = 56;
         uintToBytes(offset, boughtAmount, message);
@@ -106,6 +109,6 @@ contract Hashicore is Ownable, Seriality{
         offset -= sizeOfAddress();
         addressToBytes(offset, msg.sender, message);
 
-        sendMessage(domain, msg.sender, message);
+        sendMessage(domain, recipient, message);
     }
 }
