@@ -50,14 +50,14 @@ contract AgnosticPool is Ownable {
         token.transfer(msg.sender, amount);
     }
 
-    function useLiquidity(uint amount, IERC20 token) external payable {
+    function useLiquidity(uint amount, IERC20 token, address transferTo) external payable {
         require(msg.sender == bridgeContract, "Not a whitelisted address!!");
         require(amount > 0, "Invalid Amount");
 
         require(token.balanceOf(address(this)) > amount, "Insufficient Liquidity");
 
         totalStaked[address(token)] -= amount;
-        token.transfer(bridgeContract, amount);
+        token.transfer(transferTo, amount);
     }
     
 }

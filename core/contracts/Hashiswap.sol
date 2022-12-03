@@ -23,14 +23,14 @@ contract Hashiswap {
     }
 
 
-    function executeSingleChainSwap(IERC20 sellToken, IERC20 buyToken, address spender, uint amount, address payable swapTarget, bytes calldata swapCallData) external payable {
+    function executeSingleChainSwap(IERC20 sellToken, IERC20 buyToken, address spender, uint amount, address payable swapTarget, bytes calldata swapCallData, address receiver) external payable returns (uint256 boughtAmount) {
         require(amount >= sellToken.balanceOf(msg.sender), "Insufficient Balance!!!");
         require(amount >= sellToken.allowance(msg.sender, address(this)), "Insufficient Allowance!!");
         require(swapTarget == exchangeProxy, "Target not ExchangeProxy");
 
         require(sellToken.approve(spender, type(uint128).max));
         
-        uint256 boughtAmount = buyToken.balanceOf(address(this));
+        boughtAmount = buyToken.balanceOf(address(this));
 
         sellToken.transferFrom(msg.sender, address(this), amount);
 
@@ -39,6 +39,7 @@ contract Hashiswap {
 
         boughtAmount = buyToken.balanceOf(address(this)) - boughtAmount;
 
-        buyToken.transfer(msg.sender, boughtAmount);
+        buyToken.transfer(receiver, boughtAmount);
     } 
+
 }
