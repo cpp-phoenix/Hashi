@@ -9,7 +9,7 @@ function Navbar () {
             </Link>
             <div className="space-x-20 text-[#121517]">
                 <Link className="font-semibold text-lg" to='/'>Swap</Link>
-                <Link className="font-semibold text-lg" to='/pools'>Pools</Link>
+                <Link className="font-semibold text-lg" to='/pools'>Liquidity</Link>
                 <Link className="font-semibold text-lg" to='/stats'>Analytics</Link>
             </div>
             <div className="">
