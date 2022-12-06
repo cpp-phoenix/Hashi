@@ -1,5 +1,5 @@
 import { useNetwork, useAccount, erc20ABI, useProvider, useSigner } from 'wagmi';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ethers, utils } from "ethers";
 import hashipoolabi from "../abis/hashipoolabi.json";
 
@@ -15,18 +15,18 @@ function Pools() {
             domain: 5,
             tokens: [
                 {
-                    token: "USDC",
-                    address: "0x5FfbaC75EFc9547FBc822166feD19B05Cd5890bb",
+                    token: "USDT",
+                    address: "0x69c9e542c9234a535b25df10e5a0f8542670d44a",
                     decimals: 18
                 },
                 {
-                    token: "USDT",
-                    address: "0xC51FceEc013cD34aE2e95E6D64E9858F2aC28fFf",
+                    token: "USDC",
+                    address: "0x89a543c56f8fc6249186a608bf91d23310557382",
                     decimals: 18
                 },
                 {
                     token: "DAI",
-                    address: "0xE68104D83e647b7c1C15a91a8D8aAD21a51B3B3E",
+                    address: "0x0e3b53f09f0e9b3830f7f4a3abd4be7a70713a31",
                     decimals: 18
                 }
             ]
@@ -41,18 +41,18 @@ function Pools() {
             domain: 80001,
             tokens: [
                 {
-                    token: "USDC",
-                    address: "0xe6b8a5CF854791412c1f6EFC7CAf629f5Df1c747",
-                    decimals: 6
+                    token: "USDT",
+                    address: "0x07cD0B7fC7979CFd1a76b124F551E981944eFF41",
+                    decimals: 18
                 },
                 {
-                    token: "USDT",
-                    address: "0xA02f6adc7926efeBBd59Fd43A84f4E0c0c91e832",
-                    decimals: 6
+                    token: "USDC",
+                    address: "0x4d344098b124fead012fc54b91f3099e1fec06f6",
+                    decimals: 18
                 },
                 {
                     token: "DAI",
-                    address: "0xd393b1E02dA9831Ff419e22eA105aAe4c47E1253",
+                    address: "0x8ebf563bc9a267b71b4e6055279d3cf4d3b368ee",
                     decimals: 18
                 }
             ]

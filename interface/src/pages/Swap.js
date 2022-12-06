@@ -78,11 +78,8 @@ function Swap() {
     }
 
     useEffect(() => {
-        if(isConnected) {
-            // setToChain(chain?.name);
-            // setToChainId(chain?.id);
-        } 
-    },[isConnected]);
+        
+    },[chain?.id])  
 
     const sendTransaction = () => {
 
