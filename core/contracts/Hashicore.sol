@@ -2,34 +2,54 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
-import "@hyperlane-xyz/core/interfaces/IMailbox.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
-import "./Seriality.sol";
 
-/**
- * @title Seriality
- * @dev The Seriality contract is the main interface for serializing data using the TypeToBytes, BytesToType and SizeOf
- * @author pouladzade@gmail.com
- */
+interface IMailbox {
+    function localDomain() external view returns (uint32);
+
+    function dispatch(
+        uint32 _destinationDomain,
+        bytes32 _recipientAddress,
+        bytes calldata _messageBody
+    ) external returns (bytes32);
+
+    function process(bytes calldata _metadata, bytes calldata _message)
+        external;
+
+    function count() external view returns (uint32);
+
+    function root() external view returns (bytes32);
+
+    function latestCheckpoint() external view returns (bytes32, uint32);
+}
+
+// A partial ERC20 interface.
+interface IERC20 {
+    function allowance(address owner, address spender) external view returns (uint256);
+    function balanceOf(address owner) external view returns (uint256);
+    function approve(address spender, uint256 amount) external returns (bool);
+    function transfer(address to, uint256 amount) external returns (bool);
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) external returns (bool);
+}
 
 interface IHashipool {
     function useLiquidity(uint amount, IERC20 token, address transferTo) external payable;
 }
 
-contract Hashicore is Ownable, Seriality{
+contract Hashicore is Ownable {
 
     IMailbox mailbox;
     IHashipool hashipool;
-    address public lastSender;
-    string public lastMessage;
-    uint public sourceChainId = 80001;
     mapping(uint32 => bool) public domains;
     mapping(address => bool) public inboxes;
     struct ChainObject {
         uint32 domain;
         address outbox;
     }
-    mapping(uint => ChainObject) public chainMapping;
 
     modifier onlyEthereumInbox(uint32 origin) {
         require(domains[origin] && inboxes[msg.sender]);
@@ -50,10 +70,6 @@ contract Hashicore is Ownable, Seriality{
 
     function toggleInboxes(address _inbox, bool enabled) external onlyOwner {
         inboxes[_inbox] = enabled;
-    }
-
-    function addDomain(uint chaindId, uint32 domain, address outbox) external onlyOwner {
-        chainMapping[chaindId] = ChainObject(domain, outbox);
     }
 
     function addressToBytes32(address _addr) internal pure returns (bytes32) {
@@ -80,12 +96,12 @@ contract Hashicore is Ownable, Seriality{
         bytes32 _sender,
         bytes calldata _message
     ) public {
-        uint offset = 56;
-        uint amount = bytesToUint8(offset, _message);
-        offset -= sizeOfAddress();
-        address multiChainToken = bytesToAddress(offset, _message);
-        offset -= sizeOfAddress();
-        address msgSender = bytesToAddress(offset, _message);
+        
+        uint amount;
+        address multiChainToken;
+        address msgSender;
+
+        (amount, multiChainToken, msgSender) = abi.decode(_message,(uint, address, address));
         hashipool.useLiquidity(amount, IERC20(multiChainToken), msgSender);
 
         emit ReceivedMessage(_origin, bytes32ToAddress(_sender), _message);
@@ -93,21 +109,13 @@ contract Hashicore is Ownable, Seriality{
 
     function initiateBridge(uint32 domain, address recipient, IERC20 multiChainToken, IERC20 sellToken, uint amount) public payable {
 
-        // uint256 boughtAmount = hashiswap.executeSingleChainSwap(sellToken, buyToken, spender, amount, swapTarget, swapCallData, msg.sender);
-        
         require(sellToken.balanceOf(msg.sender) >= amount, "Insufficient Balance");
         require(sellToken.allowance(msg.sender, address(this)) >= amount, "Not Approved");
 
         sellToken.transferFrom((msg.sender),address(hashipool), amount);
         
         uint256 boughtAmount = amount;
-        bytes memory message = new bytes(56);
-        uint offset = 56;
-        uintToBytes(offset, boughtAmount, message);
-        offset -= sizeOfAddress();
-        addressToBytes(offset, address(multiChainToken), message);
-        offset -= sizeOfAddress();
-        addressToBytes(offset, msg.sender, message);
+        bytes memory message = abi.encode(boughtAmount, multiChainToken, msg.sender);
 
         sendMessage(domain, recipient, message);
     }

@@ -15,7 +15,6 @@ import {
 } from 'wagmi';
 import { publicProvider } from 'wagmi/providers/public';
 import Swap from './pages/Swap';
-import Stats from './pages/Stats';
 import Pools from './pages/Pools';
 import Navbar from './components/Navbar';
 
@@ -64,7 +63,6 @@ function App() {
             <Navbar/>
             <Routes>
               <Route path='/' exact element={<Swap/>} />
-              <Route path='/stats' element={<Stats/>} />
               <Route path='/pools' element={<Pools/>} />
             </Routes>
           </Router>

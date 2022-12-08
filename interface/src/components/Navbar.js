@@ -7,10 +7,10 @@ function Navbar () {
             <Link className="font-semibold text-4xl text-orange-600 hover:text-orange-500" to='/'>
                 Hashi
             </Link>
-            <div className="space-x-20 text-[#121517]">
-                <Link className="font-semibold text-lg" to='/'>Swap</Link>
+            <div className="space-x-40 text-[#121517]">
+                <Link className="font-semibold text-lg" to='/'>Bridge</Link>
                 <Link className="font-semibold text-lg" to='/pools'>Liquidity</Link>
-                <Link className="font-semibold text-lg" to='/stats'>Analytics</Link>
+                {/* <Link className="font-semibold text-lg" to='/stats'>Analytics</Link> */}
             </div>
             <div className="">
                 <ConnectButton chainStatus="icon" showBalance={false}/>

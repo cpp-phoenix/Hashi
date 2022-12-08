@@ -1,16 +1,22 @@
 import { useNetwork, useAccount, erc20ABI, useProvider, useSigner } from 'wagmi';
 import { useEffect, useState } from 'react';
 import { ethers, utils } from "ethers";
+import { useAlert, positions } from 'react-alert'
+import { NavLink as Link } from 'react-router-dom';
 import hashipoolabi from "../abis/hashipoolabi.json";
 
 function Pools() {
+
+    const alert = useAlert()
+
     const chainObj = {
         5: {
             chainId: 5,
             chianName: "Goerli",
+            explorer: "https://goerli.etherscan.io/tx/",
             rpc: "https://goerli.infura.io/v3/",
             zeroX: "https://goerli.api.0x.org/",
-            receiverContract: "",
+            receiverContract: "0xD071f6B59668943d1f956e2520bF63830208550F",
             hashiPoolContract: "0x1120efb1bae427a84c7d09117f9729acae175dce",
             domain: 5,
             tokens: [
@@ -34,9 +40,10 @@ function Pools() {
         80_001: {
             chainId: 80_001,
             chianName: "Mumbai",
+            explorer: "https://mumbai.polygonscan.com/tx/",
             rpc: "https://matic-mumbai.chainstacklabs.com",
             zeroX: "https://mumbai.api.0x.org/",
-            receiverContract: "",
+            receiverContract: "0x62764FcDe60D1a6b07C22A26ECe63f92A141f1BB",
             hashiPoolContract: "0x5e242e8ef9239cbf71399c4b5b9e1465905cd7cf",
             domain: 80001,
             tokens: [
@@ -66,37 +73,94 @@ function Pools() {
     const [viewPool, setViewPool] = useState(false);
     const [selectPool, setSelectPool] = useState({});
     const [totalStaked, setTotalStaked] = useState(0);
+    const [myStake, setMyStake] = useState(0);
     const [depositAmount, setDepositAmount] = useState(0);
     const [withdrawAmount, setWithdrawAmount] = useState(0);
 
-    function checkTotalStaked(token) {
-        const contract = new ethers.Contract(token.address, erc20ABI, provider);
-        console.log(token);
+    async function checkTotalUserStaked(token) {
+        setMyStake(0);
+        const hashiPoolContract = new ethers.Contract(chainObj[chain.id].hashiPoolContract, hashipoolabi, signer);
+        let amount = await hashiPoolContract.stableStorage(address, token.address);
+        let stakedAmount = ethers.utils.formatUnits(amount.toString(), token.decimals);
+        setMyStake(stakedAmount);
+
+        setTotalStaked(0);
+        const contract = new ethers.Contract(token.address, erc20ABI, signer);
+        amount = await contract.balanceOf(chainObj[chain.id].hashiPoolContract);
+        console.log(amount.toString());
+        stakedAmount = ethers.utils.formatUnits(amount.toString(), token.decimals);
+        setTotalStaked(stakedAmount);
     }
 
     const triggerDeposit = async () => {
-        const contract = new ethers.Contract(selectPool.address, erc20ABI, signer);
-        const allowed = await contract.allowance(address, chainObj[chain.id].hashiPoolContract);
-        console.log(allowed.toString());
-        let  amount = String(depositAmount * 10 ** selectPool.decimals);
-        if(allowed.toString() < amount) {
-            console.log("allow");
-            await contract.approve(chainObj[chain.id].hashiPoolContract, amount);
-        } else {
-            console.log("Transact");
-            const hashiPoolContract = new ethers.Contract(chainObj[chain.id].hashiPoolContract, hashipoolabi, signer);
-            await hashiPoolContract.depositInPool(amount, selectPool.address);
+        if(depositAmount > 0) {
+            const contract = new ethers.Contract(selectPool.address, erc20ABI, signer);
+            const allowed = await contract.allowance(address, chainObj[chain.id].hashiPoolContract);
+            let  amount = String(depositAmount * 10 ** selectPool.decimals);
+            let txn;
+            if(allowed.toString() < amount) {
+                try {
+                    txn = await contract.approve(chainObj[chain.id].hashiPoolContract, amount);
+                    alert.success(
+                        <div>
+                            <div>Transaction Sent</div>
+                            <button className='text-xs' onClick={()=> window.open(chainObj[chain.id].explorer + txn.hash, "_blank")}>View on explorer</button>
+                        </div>, {
+                        timeout: 0,
+                        position: positions.BOTTOM_RIGHT
+                    });
+                } catch(ex) {
+                    alert.error(<div>Operation failed</div>, {
+                        timeout: 3000,
+                        position: positions.TOP_RIGHT
+                    });
+                }
+            } else {
+                const hashiPoolContract = new ethers.Contract(chainObj[chain.id].hashiPoolContract, hashipoolabi, signer);
+                try{
+                    txn = await hashiPoolContract.depositInPool(amount, selectPool.address);
+                    alert.success(
+                        <div>
+                            <div>Transaction Sent</div>
+                            <button className='text-xs' onClick={()=> window.open(chainObj[chain.id].explorer + txn.hash, "_blank")}>View on explorer</button>
+                        </div>, {
+                        timeout: 0,
+                        position: positions.BOTTOM_RIGHT
+                    });
+                } catch(ex) {
+                    alert.error(<div>Operation failed</div>, {
+                        timeout: 3000,
+                        position: positions.TOP_RIGHT
+                    });
+                }
+            }
         }
     }
 
     const triggerWithdraw = async () => {
-        const contract = new ethers.Contract(selectPool.address, erc20ABI, signer);
-        const allowed = await contract.allowance(address, chainObj[chain.id].hashiPoolContract);
-        console.log(allowed.toNumber());
-        let  amount = String(depositAmount * 10 ** selectPool.decimals);
-        const hashiPoolContract = new ethers.Contract(chainObj[chain.id].hashiPoolContract, hashipoolabi, signer);
-        await hashiPoolContract.widthdrawFromPool(amount, selectPool.address);
-    }
+        if(withdrawAmount > 0) {
+            const contract = new ethers.Contract(selectPool.address, erc20ABI, signer);
+            const allowed = await contract.allowance(address, chainObj[chain.id].hashiPoolContract);
+            let  amount = String(withdrawAmount * 10 ** selectPool.decimals);
+            const hashiPoolContract = new ethers.Contract(chainObj[chain.id].hashiPoolContract, hashipoolabi, signer);
+            try {
+                const txn = await hashiPoolContract.widthdrawFromPool(amount, selectPool.address);
+                alert.success(
+                    <div>
+                        <div>Transaction Sent</div>
+                        <button className='text-xs' onClick={()=> window.open(chainObj[chain.id].explorer + txn.hash, "_blank")}>View on explorer</button>
+                    </div>, {
+                    timeout: 0,
+                    position: positions.BOTTOM_RIGHT
+                });
+            } catch(ex) {
+                alert.error(<div>Operation failed</div>, {
+                    timeout: 3000,
+                    position: positions.TOP_RIGHT
+                });
+            }
+        }
+    }   
 
     return (
         <div className="flex flex-1 items-center justify-center h-5/6">
@@ -106,27 +170,31 @@ function Pools() {
                 <div className="flex w-full items-center justify-center text-2xl mt-2 pb-2 border-b-2">Liquidity</div>
                 <div className="flex flex-row space-x-4">
                     <input onChange = {(e) => setDepositAmount(e.target.value)} className="placeholder:text-slate-400 block bg-white w-full py-2 pl-2 pr-3 shadow-sm focus:outline-none focus:border-sky-500 focus:ring-sky-500 focus:ring-1 sm:text-sm" placeholder="Enter Amount to deposit" type="number" name="toAmount"/>       
-                    <button onClick={() => triggerDeposit()} className="rounded-lg px-6 py-4 bg-orange-600 text-white">Deposit</button>
+                    <button onClick={() => triggerDeposit()} className="rounded-lg px-6 py-4 bg-orange-600 hover:bg-orange-500 text-white">Deposit</button>
                 </div>
                 <div className="flex flex-row space-x-4">
                     <input onChange = {(e) => setWithdrawAmount(e.target.value)} className="placeholder:text-slate-400 block bg-white w-full py-2 pl-2 pr-3 shadow-sm focus:outline-none focus:border-sky-500 focus:ring-sky-500 focus:ring-1 sm:text-sm" placeholder="Enter Amount to withdraw" type="number" name="toAmount"/>       
-                    <button onClick={() => triggerWithdraw()} className="rounded-lg px-6 py-4 bg-orange-600 text-white">Withdraw</button>
+                    <button onClick={() => triggerWithdraw()} className="rounded-lg px-6 py-4 bg-orange-600 hover:bg-orange-500 text-white">Withdraw</button>
                 </div>
-                <div className="flex justify-center h-[100px] text-2xl items-center border-1 bg-gray-200 rounded-lg px-10">
-                    Total Staked: {totalStaked}
+                <div className="flex justify-between h-[100px] font-semibold text-lg items-center border-1 bg-gray-200 rounded-lg px-10">
+                    <div>Total Staked: {totalStaked}</div>
+                    <div>My Stake: {myStake}</div>
                 </div>
-                <div onClick={() => setViewPool(!viewPool)} className="rounded-lg flex w-full items-center justify-center text-xl mt-2 border-2 py-4 bg-gray-400 text-white hover:cursor-pointer">Close</div>
+                <div onClick={() => setViewPool(!viewPool)} className="rounded-lg flex w-full items-center justify-center text-xl mt-2 py-4 bg-orange-700 hover:bg-orange-600 text-white hover:cursor-pointer">Close</div>
             </div>
         }
         {
             isConnected && 
             <div className="rounded-lg w-4/12 h-content bg-white">
+                {/* <button className='bg-white' onClick={() => { alert.success(<div><div>Transaction Sent</div><button className='text-xs' onClick={()=> window.open(chainObj[chain.id].explorer + "0x36fafaa15e8470a68dcc270816d6ab440195139f9b886c56fe940566a74e6ce6", "_blank")}>View on explorer</button></div>) }}> Show Alert </button> */}
                 {chainObj[chain.id].tokens.map(token => <div className="rounded-lg my-1 bg-gray-100 flex items-center text-xl w-full h-[100px] px-4 py-2 hover:bg-gray-200">
-                    <div className="flex flex-row justify-between w-full"> 
-                        <div> {token.token} </div>
+                    <div className="flex flex-row items-center justify-between w-full"> 
+                        <div> 
+                            <div>{token.token}</div>
+                        </div>
                         <div className="flex flex-row space-x-6"> 
-                            <button onClick={() => {setViewPool(!viewPool); setSelectPool(token); checkTotalStaked(token);}} className="rounded-lg bg-orange-600 text-white p-4">Deposit</button>
-                            <button onClick={() => {setViewPool(!viewPool); setSelectPool(token); checkTotalStaked(token);}} className="rounded-lg bg-orange-600 text-white p-4">Withdraw</button>
+                            <button onClick={() => {setViewPool(!viewPool); setSelectPool(token); checkTotalUserStaked(token);}} className="rounded-lg bg-orange-600 hover:bg-orange-500 text-white p-4">Deposit</button>
+                            <button onClick={() => {setViewPool(!viewPool); setSelectPool(token); checkTotalUserStaked(token);}} className="rounded-lg bg-orange-600 hover:bg-orange-500 text-white p-4">Withdraw</button>
                         </div>
                     </div>
                 </div>)}
