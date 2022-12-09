@@ -21,7 +21,7 @@ function Swap() {
         token: "Select"
     });
     const [tokenTo, setTokenTo] = useState({
-        token: "Select"
+        token: "-"
     });
     const [showFromTokenList, setShowFromTokenList] = useState(false);
     const [showToTokenList, setShowToTokenList] = useState(false);
@@ -212,7 +212,7 @@ function Swap() {
                                     </div>
                                 }
                                 <div onClick={() => setShowFromTokenList(!showFromTokenList)} className="hover:cursor-pointer">
-                                    {tokenFrom.token}
+                                    {tokenFrom.token} v
                                 </div>
                             </div>
                         </div>
