@@ -63,6 +63,33 @@ function Pools() {
                     decimals: 18
                 }
             ]
+        },
+        1_287: {
+            chainId: 1_287,
+            chianName: "Moonbase Alpha",
+            explorer: "https://moonbase-blockscout.testnet.moonbeam.network/tx/",
+            rpc: "https://rpc.testnet.moonbeam.network",
+            zeroX: "https://mumbai.api.0x.org/",
+            receiverContract: "0xa6b89f78EBb580377253189542Ac955BF2d5C2c1",
+            hashiPoolContract: "0xa55423473728a53a9BA09571C20Bc1Be1bD4862A",
+            domain: 0x6d6f2d61,
+            tokens: [
+                {
+                    token: "USDT",
+                    address: "0x14c5f75466f4719d5d405e3ff0b7d181ce8ee1cc",
+                    decimals: 18
+                },
+                {
+                    token: "USDC",
+                    address: "0x2dEcD02F465E5e60B34598A2E0F2B0a2759377FD",
+                    decimals: 18
+                },
+                {
+                    token: "DAI",
+                    address: "0x9ad872caba5320ef0ed49a52f69a3d159525f485",
+                    decimals: 18
+                }
+            ]
         }
     }
 
@@ -94,11 +121,12 @@ function Pools() {
 
     const triggerDeposit = async () => {
         if(depositAmount > 0) {
+            console.log(chain.id);
             const contract = new ethers.Contract(selectPool.address, erc20ABI, signer);
             const allowed = await contract.allowance(address, chainObj[chain.id].hashiPoolContract);
             let  amount = String(depositAmount * 10 ** selectPool.decimals);
             let txn;
-            if(allowed.toString() < amount) {
+            if(parseInt(allowed.toString(),18) < parseInt(amount,18)) {
                 try {
                     txn = await contract.approve(chainObj[chain.id].hashiPoolContract, amount);
                     alert.success(
